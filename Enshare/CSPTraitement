@@ -1,0 +1,19 @@
+client == (
+    modification[1..N] : booleen;
+    listeDocs[1..N] : chaine de caractère;
+    
+    *[
+        clientControl ?? ok_verrouillage(f) ->
+            modification[f] = vrai;
+            
+    []  clientControl ?? liste(f1, f2, ..., fN) ->
+            listeDocs <- liste(f1, f2, ..., fN);
+            afficher(listeDocs);
+
+    []  clientControl ?? copie(Df, f) ->
+            afficher(Df);
+            
+    []  clientControl ? deconnexion()->
+            exit();
+    ]
+)

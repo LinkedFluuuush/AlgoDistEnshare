@@ -1,0 +1,73 @@
+clientControl[i=1..K] == (
+    dernier[1..N] : entier;
+    suivant[1..N] : entier;
+    jeton[1..N] : booleen;
+    demandeur[1..N] : booleen;
+    connecte : booleen;
+    
+    *[
+        clientControl[j] ?? demande_verrouillage(f, k) ->
+            [   dernier[f] = nil ->
+                    skip;
+            []  dernier[f] != nil -> 
+                    dernier[f] !! demande_verrouillage(f, k);
+            ];
+            
+            dernier[f] <- k;
+            
+            [   suivant[f] = nil, demandeur[f] = false ->   
+                    k !! ok_verrouillage(f);
+            []  suivant[f] = nil, demandeur[f] = true -> 
+                    suivant[f] <- k;
+            []  suivant[f] != nil -> 
+                    skip;
+            ];
+            
+    []  clientControl[j] ?? ok_verrouillage(f) -> 
+            jeton[f] <- vrai;
+            clientTrait[i] !! ok_verrouillage(f);
+            
+    []  serveur ?? liste(f1, f2, f3, ..., fN) ->
+            clientTrait[i] !! liste(f1, f2, f3, ..., fN);
+            
+    []  serveur ?? copie(Df, f) ->
+            clientTrait[i] !! copie(Df, f);
+            
+    []  clientTrait ?? connexion() ->
+            serveur ! connexion();
+            serveur ? connecte;
+            *[ connecte  = false -> 
+                    serveur ! connexion();
+                    serveur ? connecte;
+            ]
+            
+            serveur !! demande_liste();
+        
+    []  clientTrait ?? demandeDoc(f) ->
+            serveur !! demandeDoc(f);
+        
+    []  clientTrait ?? enregistrer(Df, f) ->
+            serveur !! enregistrer(Df, f);
+        
+    []  clientTrait ?? fermeture(f) ->
+            serveur !! fermeture(f);
+        
+    []  clientTrait ?? deconnexion() ->
+            serveur ! deconnexion();
+            connecte <- false;
+            clientTrait ! deconnecté();
+        
+    []  clientTrait ?? demande_verrouillage(f) ->
+            demandeur[f] <- vrai;
+            dernier[f] !! demande_verrouillage(f, i);
+        
+    []  clientTrait ?? fin_verrouillage(f) ->
+            demandeur[f] <- faux;
+            
+            [   suivant[f] = nil -> 
+                    skip;
+            []  suivant[f] != nil -> suivant[f] !! 
+                    ok_verrouillage(f);
+            ];
+    ]
+)

@@ -1,0 +1,35 @@
+serveur == (
+    document[1..N] : fichier;
+    connecteSur[1..N] : liste <clientControl>;
+    
+    *[
+        clientControl[i] ?? connexion() ->
+            connecte = doConnect(); //Peut renvoyer vrai ou faux selon la reussite de la connexion
+            i !! connecte;
+            
+        clientControl[i] ?? demande_liste() ->
+            i !! liste(document);
+        
+        clientControl[i] ?? demande_doc(f) ->
+            connecteSur[f] <- connecteSur[f] + i;
+            copie(document[f], f);
+        
+        clientControl[i] ?? enregistrer(Df, f) ->
+            document[f] <- Df;
+        
+        clientControl[i] ?? fermeture(f) ->
+            connecteSur[f] <- connecteSur[f] - i;
+        
+        clientControl[i] ?? deconnexion() ->
+            f <- 0;
+            *[f != N ->
+                [   connecteSur[f] contient(i) ->
+                        connecteSur[f] <- connecteSur[f] - i;
+                []  !(connecteSur[f] contient(i)) -> 
+                        skip;
+                ]
+                
+                f <- f + 1;
+            ]
+    ]
+)
