@@ -3,7 +3,7 @@
 # ./run_server.sh <server_url> <directory>
 #
 
-CLASS_PATH=./build/classes
+CLASS_PATH=./bin
 
 killall rmiregistry 2> /dev/null
 sleep 1
