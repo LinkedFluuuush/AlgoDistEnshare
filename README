@@ -1,0 +1,12 @@
+# 1/ Décompressez l'archive Enshare.zip, ce qui vous donne un répertoire Enshare
+# 2/ Déplacez le répertoire Enshare dans votre répertoire workspace d'Eclipse (vous aurez donc un répertoire ~/quelquepart/workspace/Enshare)
+# 3/ Créez un nouveau projet ("Projet Java") dans Eclipse et appelez le "Enshare" (du même nom exactement que le répertoire dans votre workspace.
+
+# 4/ Éditer les fichiers run_server.sh, run_gui_client.sh et run_console_client.sh et changez la valeur ./build/classes par ./bin
+
+# 5/ Lancement du serveur (dans le répertoire contenant run_server.sh)
+./run_server.sh rmi://localhost:1099/serveur .
+
+# 6/ Lancement de clients
+./run_gui_client.sh rmi://localhost:1099/client1 rmi://localhost:1099/serveur
+./run_gui_client.sh rmi://localhost:1099/client2 rmi://localhost:1099/serveur
