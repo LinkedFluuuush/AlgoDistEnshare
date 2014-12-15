@@ -3,7 +3,7 @@ clientControl[i=1..K] == (
     suivant[1..N] : entier;
     jeton[1..N] : booleen;
     demandeur[1..N] : booleen;
-    connecte : booleen;
+    idDernier : entier;
     
     *[
         clientControl[j] ?? demande_verrouillage(f, k) ->
@@ -29,16 +29,22 @@ clientControl[i=1..K] == (
             
     []  serveur ?? liste(f1, f2, f3, ..., fN) ->
             clientTrait[i] !! liste(f1, f2, f3, ..., fN);
+
+        [   idDernier != i ->
+                dernier[1..N] <- idDernier;
+        []  idDernier == i ->
+                dernier[1..N] <- nil;
+        ];
             
     []  serveur ?? copie(Df, f) ->
             clientTrait[i] !! copie(Df, f);
             
     []  clientTrait ?? connexion() ->
             serveur ! connexion();
-            serveur ? connecte;
-            *[ connecte  = false -> 
+            serveur ? connecte(idDernier);
+            *[ idDernier  = -1 ->
                     serveur ! connexion();
-                    serveur ? connecte;
+                    serveur ? connecte(idDernier);
             ]
             
             serveur !! demande_liste();
@@ -59,8 +65,13 @@ clientControl[i=1..K] == (
         
     []  clientTrait ?? demande_verrouillage(f) ->
             demandeur[f] <- vrai;
-            dernier[f] !! demande_verrouillage(f, i);
-        
+
+            [   dernier[f] != nil ->
+                    dernier[f] !! demande_verrouillage(f, i);
+            []  dernier[f] == nil ->
+                    clientTrait[i] !! ok_verrouillage(f);
+            ]
+
     []  clientTrait ?? fin_verrouillage(f) ->
             demandeur[f] <- faux;
             

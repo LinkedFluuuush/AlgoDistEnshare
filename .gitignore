@@ -22,6 +22,6 @@ bin/
 .metadata/
 
 #Launching files
-run_console_client.sh
-run_gui_client.sh
-run_server.sh
+run_console_client_IJ.sh
+run_gui_client_IJ.sh
+run_server_IJ.sh
