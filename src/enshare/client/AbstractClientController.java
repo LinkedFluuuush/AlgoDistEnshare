@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -97,13 +98,19 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
                 /* Nothing */
             } catch (FileNotFoundException ex) {
                 /* Nothing */
+            } catch (MalformedURLException e) {
+                /* Nothing */
+            } catch (NotBoundException e) {
+                /* Nothing */
             }
             if (hasDocument()) {
                 try {
                     unlockDocument();
                 } catch (RemoteException ex) {
                     Logger.getLogger(AbstractClientController.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (FileNotFoundException ex) {
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(AbstractClientController.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (NotBoundException ex) {
                     Logger.getLogger(AbstractClientController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -146,7 +153,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     /**
      * Retourne le document observé
      *
-     * @return
+     * @return Le document observé
      */
     protected synchronized DocumentInterface getDocument() {
         if (hasDocument()) {
@@ -167,7 +174,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     }
 
     @Override
-    public synchronized void saveDocumentAs(String _fileName) throws RemoteException, FileAlreadyExistsException, IOException {
+    public synchronized void saveDocumentAs(String _fileName) throws IOException, NotBoundException {
         // Mémorise le document actuel
         DocumentInterface d = observedDocument.getDocument();
         // Mémorise l'état du verrouillage
@@ -186,7 +193,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     }
 
     @Override
-    public synchronized void newDocument(String _fileName) throws FileAlreadyExistsException, IOException {
+    public synchronized void newDocument(String _fileName) throws IOException {
         newDocument(_fileName, false);
     }
 
@@ -196,10 +203,9 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
      *
      * @param _fileName Nom du fichier à créer
      * @param _isLocked Vrai si le nouveau fichier doit être verrouillé après sa création, faux sinon
-     * @throws FileAlreadyExistsException Si le fichier demandé existe déjà
      * @throws IOException Si une erreur survient lors de l'écriture du fichier sur le disque
      */
-    protected abstract void newDocument(String _fileName, boolean _isLocked) throws FileAlreadyExistsException, IOException;
+    protected abstract void newDocument(String _fileName, boolean _isLocked) throws IOException;
 
     @Override
     public synchronized void updateDocument(String sourceUrl, DocumentInterface d) throws RemoteException {

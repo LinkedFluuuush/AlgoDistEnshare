@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
@@ -72,15 +73,13 @@ public class CentralizedClientController extends AbstractClientController {
         }
     }
 
-    ;
-
     @Override
     public synchronized List<String> getDocumentList() throws RemoteException {
         List<String> documentList = server.getDocumentList();
         dernier = new HashMap<String, String>();
         suivant = new HashMap<String, String>();
 
-        if(idDernier == this.getUrl()){
+        if(idDernier.equals(this.getUrl())){
             for(String name : documentList){
                 dernier.put(name, null);
                 suivant.put(name, null);
@@ -96,14 +95,14 @@ public class CentralizedClientController extends AbstractClientController {
     }
 
     @Override
-    public synchronized void openDocument(String _fileName) throws RemoteException, FileNotFoundException {
+    public synchronized void openDocument(String _fileName) throws RemoteException, FileNotFoundException, MalformedURLException, NotBoundException {
         closeDocument();
         observedDocument.setDocument(server.getDocument(url, _fileName));
         setFileName(_fileName);
     }
 
     @Override
-    public synchronized void closeDocument() throws RemoteException, FileNotFoundException {
+    public synchronized void closeDocument() throws RemoteException, FileNotFoundException, MalformedURLException, NotBoundException {
         if (hasDocument()) {
             unlockDocument();
             server.closeDocument(url, fileName, getDocument());
@@ -116,29 +115,63 @@ public class CentralizedClientController extends AbstractClientController {
     }
 
     @Override
-    public synchronized boolean tryLockDocument() throws RemoteException, FileNotFoundException {
-        /* if (hasDocument() && !isLocked()) {
-            locked = server.tryLockDocument(url, fileName);
-            return locked;
-        } */
+    public void tryLockDocument(String url) throws RemoteException, MalformedURLException, NotBoundException {
+        if(!url.equals(this.getUrl())) {
 
-        if(dernier.get(fileName) != null){
+            if (dernier.get(fileName) != null) {
+                try {
+                    RemoteControllerInterface r = (RemoteControllerInterface) Naming.lookup(dernier.get(fileName));
 
+                    r.tryLockDocument(url);
+                } catch (NotBoundException e) {
+                    e.printStackTrace();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            dernier.put(fileName, url);
+
+            if (suivant.get(fileName) == null) {
+                if (demandeur) {
+                    suivant.put(fileName, url);
+                } else {
+                    RemoteControllerInterface r = (RemoteControllerInterface) Naming.lookup(dernier.get(fileName));
+
+                    r.lockDocument();
+                }
+            }
+        } else {
+            demandeur = true;
+
+            if(dernier.get(fileName) == null){
+                lockDocument();
+            } else {
+                RemoteControllerInterface r = (RemoteControllerInterface)Naming.lookup(dernier.get(fileName));
+                r.tryLockDocument(url);
+            }
         }
-
-        return false;
     }
 
     @Override
-    public synchronized void unlockDocument() throws RemoteException, FileNotFoundException {
+    public void lockDocument(){
+        locked = true;
+    }
+
+    @Override
+    public synchronized void unlockDocument() throws RemoteException, MalformedURLException, NotBoundException {
         if (hasDocument()) {
-            server.unlockDocument(url, fileName, getDocument());
+            demandeur = false;
             locked = false;
+
+            if(suivant.get(fileName) != null){
+                ((RemoteControllerInterface) Naming.lookup(suivant.get(fileName))).lockDocument();
+            }
         }
     }
 
     @Override
-    protected synchronized void newDocument(String _fileName, boolean _isLocked) throws FileAlreadyExistsException, IOException {
+    protected synchronized void newDocument(String _fileName, boolean _isLocked) throws IOException {
         observedDocument.setDocument(server.newDocument(url, _fileName, _isLocked));
         setFileName(_fileName);
     }

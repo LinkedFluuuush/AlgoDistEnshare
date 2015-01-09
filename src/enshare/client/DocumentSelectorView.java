@@ -62,7 +62,7 @@ public class DocumentSelectorView extends javax.swing.JDialog {
      * Affiche le sélectionneur de fichier et retourne le nom sélectionné
      * lorsque ce dernier est validé par l'utilisateur
      *
-     * @return
+     * @return Le nom du fichier sélectionné
      */
     public String showAndSelect() {
         setVisible(true);

@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Observable;
@@ -76,7 +77,7 @@ public class ClientView extends javax.swing.JFrame implements Observer {
     /**
      * Creates new form DocumentEditor
      *
-     * @param _controller
+     * @param _controller Le contrôleur associé au client
      */
     public ClientView(AbstractClientController _controller) {
         controller = _controller;
@@ -237,6 +238,10 @@ public class ClientView extends javax.swing.JFrame implements Observer {
             printError("Erreur de l'ouverture de " + _fileName, ex.getMessage());
         } catch (FileNotFoundException ex) {
             printError("Erreur de l'ouverture de " + _fileName, ex.getMessage());
+        } catch (MalformedURLException ex) {
+            printError("Erreur de l'ouverture de " + _fileName, ex.getMessage());
+        } catch (NotBoundException ex) {
+            printError("Erreur de l'ouverture de " + _fileName, ex.getMessage());
         }
     }//GEN-LAST:event_loadButtonActionPerformed
     /**
@@ -274,16 +279,16 @@ public class ClientView extends javax.swing.JFrame implements Observer {
         if (!controller.isLocked()) {
             lockToggleButton.setSelected(false);
             try {
-                // Verrouillage accepté
-                if (controller.tryLockDocument()) {
-                    enableWriting();
-                } // Verrouillage refusé
-                else {
-                    printError("Échec", "Le verrouillage a échoué.");
-                }
+                controller.tryLockDocument(controller.getUrl());
+
+                while(!controller.isLocked());
+
+                enableWriting();
             } catch (RemoteException ex) {
                 printError("Erreur lors du verrouillage", ex.getMessage());
-            } catch (FileNotFoundException ex) {
+            } catch (MalformedURLException ex) {
+                printError("Erreur lors du verrouillage", ex.getMessage());
+            } catch (NotBoundException ex) {
                 printError("Erreur lors du verrouillage", ex.getMessage());
             }
         } // Verrouillé -> non verrouillé
@@ -292,7 +297,9 @@ public class ClientView extends javax.swing.JFrame implements Observer {
                 controller.unlockDocument();
             } catch (RemoteException ex) {
                 printError("Erreur lors du déverrouillage", ex.getMessage());
-            } catch (FileNotFoundException ex) {
+            } catch (MalformedURLException ex) {
+                printError("Erreur lors du déverrouillage", ex.getMessage());
+            } catch (NotBoundException ex) {
                 printError("Erreur lors du déverrouillage", ex.getMessage());
             }
             disableWriting();
@@ -360,6 +367,8 @@ public class ClientView extends javax.swing.JFrame implements Observer {
                 printError("Erreur lors de la sauvegarde", ex.getMessage());
             } catch (IOException ex) {
                 printError("Erreur lors de la sauvegarde", ex.getMessage());
+            } catch (NotBoundException ex) {
+                printError("Erreur lors de la sauvegarde", ex.getMessage());
             }
         } // Sinon erreur
         else {
@@ -381,6 +390,10 @@ public class ClientView extends javax.swing.JFrame implements Observer {
         } catch (RemoteException ex) {
             printError("Erreur lors de la fermeture", ex.getMessage());
         } catch (FileNotFoundException ex) {
+            printError("Erreur lors de la fermeture", ex.getMessage());
+        } catch (MalformedURLException ex) {
+            printError("Erreur lors de la fermeture", ex.getMessage());
+        } catch (NotBoundException ex) {
             printError("Erreur lors de la fermeture", ex.getMessage());
         }
     }//GEN-LAST:event_closeButtonActionPerformed

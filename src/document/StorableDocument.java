@@ -38,10 +38,9 @@ public class StorableDocument implements Storable {
      * Constructeur à partir d'un chemin de fichier
      * <p>Remarque: charge le document.</p>
      * @param _path Chemin du fichier
-     * @throws FileNotFoundException Si le nom de fichier n'a pas été trouvé.
      * @throws IOException Si une erreur survient lors de la lecture sur le disque.
      */
-    public StorableDocument(String _path) throws FileNotFoundException, IOException {
+    public StorableDocument(String _path) throws IOException {
         path = _path;
         storedDocument = new Document();
         load();
@@ -51,7 +50,7 @@ public class StorableDocument implements Storable {
      * Constructeur à partir d'un chemin de fichier et d'un document
      * <p>Remarque: sauvegarde le document dans le fichier.</p>
      * @param _path Chemin du fichier
-     * @param doc
+     * @param doc Le document à sauvegarder
      * @throws IOException IOException Si une erreur survient lors de l'écriture sur le disque.
      */
     public StorableDocument(String _path, DocumentInterface doc) throws IOException {
@@ -110,7 +109,7 @@ public class StorableDocument implements Storable {
     }
 
     @Override
-    public void load() throws FileNotFoundException, IOException {
+    public void load() throws IOException {
         String str = "";
         File file = new File(getPath()); //for ex foo.txt
         FileReader reader = new FileReader(file);

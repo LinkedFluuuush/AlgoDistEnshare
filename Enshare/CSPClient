@@ -42,7 +42,7 @@ clientControl[i=1..K] == (
     []  clientTrait ?? connexion() ->
             serveur ! connexion();
             serveur ? connecte(idDernier);
-            *[ idDernier  = -1 ->
+            *[ idDernier  = nil ->
                     serveur ! connexion();
                     serveur ? connecte(idDernier);
             ]
