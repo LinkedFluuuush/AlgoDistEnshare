@@ -1,0 +1,95 @@
+clientControl[i=1..K] == (
+    dernier : entier;
+    suivant : entier;
+    jeton : booleen;
+    demandeur : booleen;
+    idDernier : entier;
+    docEnCours : entier;
+    
+    *[
+        clientControl[j] ?? demande_verrouillage(k, doc) ->
+            [   docEnCours = doc ->
+                    [   dernier = nil ->
+                                        skip;
+                    []  dernier != nil ->
+                            dernier !! demande_verrouillage(k, doc);
+                    ];
+
+                    dernier <- k
+
+                    [   suivant = nil, demandeur = false ->
+                            k !! ok_verrouillage();
+                    []  suivant = nil, demandeur = true ->
+                            suivant <- k;
+                    []  suivant != nil ->
+                            skip;
+                    ];
+            []  docEnCours != doc ->
+                clientControl[j] !! erreur_dernier();
+            ];
+            
+    []  clientControl[j] ?? ok_verrouillage(doc) ->
+            [   docEnCours = doc ->
+                    jeton <- vrai;
+                    clientTrait[i] !! ok_verrouillage(doc);
+            []  docEnCours != doc, suivant[doc] != nil ->
+                    suivant[doc] !! ok_verrouillage(doc);
+            []  docEnCours != doc, suivant[doc] = nil ->
+                    skip;
+            ];
+            
+    []  serveur ?? liste(f1, f2, f3, ..., fN) ->
+            clientTrait[i] !! liste(f1, f2, f3, ..., fN);
+
+        [   idDernier != i ->
+                dernier[1..N] <- idDernier;
+        []  idDernier == i ->
+                dernier[1..N] <- nil;
+        ];
+            
+    []  serveur ?? copie(Df, f) ->
+            clientTrait[i] !! copie(Df, f);
+            
+    []  clientTrait ?? connexion() ->
+            serveur ! connexion();
+            serveur ? connecte(idDernier);
+            *[ idDernier  = -1 ->
+                    serveur ! connexion();
+                    serveur ? connecte(idDernier);
+            ]
+            
+            serveur !! demande_liste();
+        
+    []  clientTrait ?? demandeDoc(f) ->
+            serveur !! demandeDoc(f);
+        
+    []  clientTrait ?? enregistrer(Df, f) ->
+            serveur !! enregistrer(Df, f);
+        
+    []  clientTrait ?? fermeture(f) ->
+            serveur !! fermeture(f);
+        
+    []  clientTrait ?? deconnexion() ->
+            serveur ! deconnexion();
+            connecte <- false;
+            clientTrait ! deconnecté();
+        
+    []  clientTrait ?? demande_verrouillage() ->
+            demandeur <- vrai;
+
+            [   dernier[f] != nil ->
+                    dernier[f] !! demande_verrouillage(f, i);
+            []  dernier[f] == nil ->
+                    clientTrait[i] !! ok_verrouillage(f);
+            ]
+
+    []  clientTrait ?? fin_verrouillage() ->
+            demandeur <- faux;
+            
+            [   suivant[f] = nil -> 
+                    skip;
+            []  suivant[f] != nil ->
+                    suivant[f] !! ok_verrouillage(f);
+            ];
+    ]
+)

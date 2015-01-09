@@ -23,6 +23,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -36,6 +37,11 @@ public class CentralizedClientController extends AbstractClientController {
      * Serveur à qui est délégué le contrôle
      */
     protected ServerInterface server;
+
+    /**
+     * Client initial pour dernier
+     */
+    protected String idDernier;
 
     /**
      * Constructeur
@@ -70,7 +76,23 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public synchronized List<String> getDocumentList() throws RemoteException {
-        return server.getDocumentList();
+        List<String> documentList = server.getDocumentList();
+        dernier = new HashMap<String, String>();
+        suivant = new HashMap<String, String>();
+
+        if(idDernier == this.getUrl()){
+            for(String name : documentList){
+                dernier.put(name, null);
+                suivant.put(name, null);
+            }
+        } else {
+            for(String name : documentList){
+                dernier.put(name, idDernier);
+                suivant.put(name, null);
+            }
+        }
+
+        return documentList;
     }
 
     @Override
@@ -95,10 +117,15 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public synchronized boolean tryLockDocument() throws RemoteException, FileNotFoundException {
-        if (hasDocument() && !isLocked()) {
+        /* if (hasDocument() && !isLocked()) {
             locked = server.tryLockDocument(url, fileName);
             return locked;
+        } */
+
+        if(dernier.get(fileName) != null){
+
         }
+
         return false;
     }
 

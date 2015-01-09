@@ -25,6 +25,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +47,21 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     protected String fileName;
 
     /**
+     * Adresse des derniers demandeurs
+     */
+    protected HashMap<String, String> dernier;
+
+    /**
+     * Adresse des demandeurs suivants
+     */
+    protected HashMap<String, String> suivant;
+
+    /**
+     * Etats de demande du client
+     */
+    protected boolean demandeur;
+
+    /**
      * État actuel du verrou
      */
     protected boolean locked;
@@ -62,8 +78,11 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
-        url = _url;
         locked = false;
+        demandeur = false;
+        dernier = null;
+        suivant = null;
+        url = _url;
         observedDocument = new ObservableDocument();
         RemoteControllerInterface stub = (RemoteControllerInterface) UnicastRemoteObject.exportObject(this, 0);
         Naming.rebind(_url, stub);
