@@ -164,18 +164,26 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     }
 
     @Override
-    public synchronized boolean connectNotepad(String clientUrl) throws RemoteException {
+    public synchronized String connectNotepad(String clientUrl) throws RemoteException {
         try {
             RemoteControllerInterface client = (RemoteControllerInterface) Naming.lookup(clientUrl);
             connectedNotepads.put(clientUrl, client);
             Logger.getLogger(Server.class.getName()).log(Level.INFO, "Connexion du notepad " + clientUrl);
-            return true;
+            if(connectedNotepads.keySet().size() == 1) {
+                return connectedNotepads.keySet().toArray()[0].toString();
+            } else {
+                if(connectedNotepads.keySet().toArray()[0].toString().equals(clientUrl)){
+                    return connectedNotepads.keySet().toArray()[1].toString();
+                } else {
+                    return connectedNotepads.keySet().toArray()[0].toString();
+                }
+            }
         } catch (NotBoundException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         } catch (MalformedURLException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         }
     }
 
@@ -189,14 +197,22 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
         for(String filename : clientDernier.keySet()){
             newDernier = clientDernier.get(filename);
             for(String url : connectedNotepads.keySet()){
-                connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
+                try {
+                    connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
         for(String filename : clientSuivant.keySet()){
             newSuivant = clientSuivant.get(filename);
             for(String url : connectedNotepads.keySet()){
-                connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
+                try {
+                    connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

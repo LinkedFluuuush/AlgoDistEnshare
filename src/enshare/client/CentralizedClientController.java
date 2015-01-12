@@ -26,6 +26,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Classe qui définit un contrôleur centralisé
@@ -54,7 +56,9 @@ public class CentralizedClientController extends AbstractClientController {
      */
     public CentralizedClientController(String _url, ServerInterface _server) throws RemoteException, MalformedURLException {
         super(_url);
-        _server.connectNotepad(url);
+        do {
+            idDernier = _server.connectNotepad(url);
+        } while(idDernier == null);
         server = _server;
     }
 
@@ -116,10 +120,14 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public void tryLockDocument(String url) throws RemoteException, MalformedURLException, NotBoundException {
+        Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Tentative de lock de " + fileName + " par " + url);
         if(!url.equals(this.getUrl())) {
+
+            Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Demande reçue de " + url);
 
             if (dernier.get(fileName) != null) {
                 try {
+                    Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Demande envoyée à " + dernier.get(fileName));
                     RemoteControllerInterface r = (RemoteControllerInterface) Naming.lookup(dernier.get(fileName));
 
                     r.tryLockDocument(url);
@@ -134,8 +142,10 @@ public class CentralizedClientController extends AbstractClientController {
 
             if (suivant.get(fileName) == null) {
                 if (demandeur) {
+                    Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Demande en attente");
                     suivant.put(fileName, url);
                 } else {
+                    Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Demande acceptée");
                     RemoteControllerInterface r = (RemoteControllerInterface) Naming.lookup(dernier.get(fileName));
 
                     r.lockDocument();
@@ -145,8 +155,10 @@ public class CentralizedClientController extends AbstractClientController {
             demandeur = true;
 
             if(dernier.get(fileName) == null){
+                Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Réussite automatique");
                 lockDocument();
             } else {
+                Logger.getLogger(CentralizedClientController.class.getName()).log(Level.INFO, "Demande envoyée à " + dernier.get(fileName));
                 RemoteControllerInterface r = (RemoteControllerInterface)Naming.lookup(dernier.get(fileName));
                 r.tryLockDocument(url);
             }
@@ -154,8 +166,10 @@ public class CentralizedClientController extends AbstractClientController {
     }
 
     @Override
-    public void lockDocument(){
+    public void lockDocument()  throws RemoteException {
         locked = true;
+        dernier.put(fileName, null);
+        suivant.put(fileName, null);
     }
 
     @Override
@@ -184,14 +198,14 @@ public class CentralizedClientController extends AbstractClientController {
     }
 
     @Override
-    public void setNewDernier(String filename, String clientUrl, String newDernier){
+    public void setNewDernier (String filename, String clientUrl, String newDernier)  throws RemoteException{
         if(dernier.get(filename).equals(clientUrl)){
             dernier.put(filename, newDernier);
         }
     }
 
     @Override
-    public void setNewSuivant(String filename, String clientUrl, String newSuivant){
+    public void setNewSuivant (String filename, String clientUrl, String newSuivant)  throws RemoteException{
         if(suivant.get(filename).equals(clientUrl)){
             suivant.put(filename, newSuivant);
         }

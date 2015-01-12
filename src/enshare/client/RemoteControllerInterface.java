@@ -61,7 +61,7 @@ public interface RemoteControllerInterface extends Remote {
     /**
      * Verrouille le document courant
      */
-    public void lockDocument();
+    public void lockDocument() throws RemoteException;
 
     /**
      * Change le dernier de clientUrl vers newDernier pour garantir la conservation des chaines lors d'une déconnexion
@@ -70,7 +70,7 @@ public interface RemoteControllerInterface extends Remote {
      * @param clientUrl  L'url du dernier actuel à changer
      * @param newDernier Le nouveau dernier à enregistrer
      */
-    public void setNewDernier(String filename, String clientUrl, String newDernier);
+    public void setNewDernier(String filename, String clientUrl, String newDernier) throws RemoteException;
 
     /**
      * Change le suivant de clientUrl vers newSuivant pour garantir la conservation des chaines lors d'une déconnexion
@@ -79,5 +79,5 @@ public interface RemoteControllerInterface extends Remote {
      * @param clientUrl  L'url du dernier actuel à changer
      * @param newSuivant Le nouveau suivant à enregistrer
      */
-    public void setNewSuivant(String filename, String clientUrl, String newSuivant);
+    public void setNewSuivant(String filename, String clientUrl, String newSuivant) throws RemoteException;
 }

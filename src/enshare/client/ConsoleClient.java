@@ -48,7 +48,7 @@ public class ConsoleClient {
         ServerInterface server = (ServerInterface) Naming.lookup(server_url);
         CentralizedClientController controller = new CentralizedClientController(my_url, server);
 
-        if (server.connectNotepad(my_url)) {
+        if (server.connectNotepad(my_url) != null) {
             System.out.println("Connexion réussie");
 
             DocumentInterface d;
@@ -73,7 +73,7 @@ public class ConsoleClient {
             }
             server.closeDocument(my_url, "f.txt", d);
             System.out.println("Fermé");
-            server.disconnectNotepad(my_url);
+            server.disconnectNotepad(my_url, null, null);
             System.out.println("Déconnecté");
             System.exit(0);
 
