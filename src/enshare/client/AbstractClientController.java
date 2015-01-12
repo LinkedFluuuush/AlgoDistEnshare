@@ -29,6 +29,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Vector;
+import java.util.Timer;
 
 /**
  * Classe abstraite du contrôleur d'un client
@@ -66,6 +68,30 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
      * État actuel du verrou
      */
     protected boolean locked;
+    /**
+     * Position dans la chaine des next
+     */
+    protected int pos;
+    
+    /**
+     * Tableau des prédécesseurs
+     */
+    protected HashMap<String, HashMap<String,Integer>> pred;
+    
+    /**
+     * Temporisateur pour détecter la perte d'une requête
+     */
+    protected Timer CommitTimer;
+    
+    /**
+     * Temporisateur pour détecter la perte du jeton
+     */
+    protected Timer TokenTimer;
+    
+    /**
+     * Temporisateur pour le recouvrement
+     */
+    protected Timer ReconnectionTimer;
 
     /**
      * Constructeur
@@ -79,6 +105,10 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
+        CommitTimer = new Timer();
+        TokenTimer = new Timer();
+        ReconnectionTimer = new Timer();
+        pred = new Vector();
         locked = false;
         demandeur = false;
         dernier = null;

@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Vector;
 
 /**
  * Interface qui définit toutes les méthodes appelables à distance sur un
@@ -62,4 +63,6 @@ public interface RemoteControllerInterface extends Remote {
      * Verrouille le document courant
      */
     public void lockDocument();
+    
+    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
 }

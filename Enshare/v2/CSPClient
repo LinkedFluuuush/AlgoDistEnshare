@@ -5,6 +5,11 @@ clientControl[i=1..K] == (
     demandeur : booleen;
     idDernier : entier;
     docEnCours : entier;
+	pred[0..k-1] : vecteur;
+	pos : entier;
+	CommitTimer : timer;
+	TokenTimer : timer;
+	ReconnectionTimer : timer;
     
     *[
         clientControl[j] ?? demande_verrouillage(k, doc) ->
@@ -18,8 +23,9 @@ clientControl[i=1..K] == (
                     dernier <- k
 
                     [   suivant = nil, demandeur = false ->
-                            k !! ok_verrouillage();
+                            k !! ok_verrouillage(),pred[],pos(i);
                     []  suivant = nil, demandeur = true ->
+							k !! COMMIT,pred[],pos(i);
                             suivant <- k;
                     []  suivant != nil ->
                             skip;
@@ -27,8 +33,71 @@ clientControl[i=1..K] == (
             []  docEnCours != doc ->
                 clientControl[j] !! erreur_dernier();
             ];
-            
-    []  clientControl[j] ?? ok_verrouillage(doc) ->
+    
+	[]  clientControl[j] ?? COMMIT,pred[],pos(j) ->
+			pred[]<- [clientControl[j],pred[j][1],...,pred[j][k-1]];
+			[	pos = -1 ->
+					pos <- pos(j) + 1;
+					[	suivant != nil ->
+							suivant !! COMMIT,clientControl[i],pred[],pos(i);
+					];
+			];
+			Alarm(TokenTimer);
+			
+	[]	TimeoutCommit -> 
+			pred.id <- nil;
+			pred.suivant <- nil;
+			pred.pos <- -1;
+			dernier <- nil;
+			suivant <- nil;
+			*[j=<K ->
+				clientControl[j] !! SEARCH_QUEUE;
+			];
+			Alarm(ReconnectionTimer);
+	
+	[]	clientControl[j] ?? SEARCH_QUEUE ->
+			*[x<K ->
+				[	clientControl[j].pos > clientControl[x].pos ->
+					[	pos != -1 -> 
+							clientControl[j] !! POSITION, pos(i),suivant;
+					[]	demandeur = true; pos != -1 ->
+							suivant <- nil;
+							dernier <- nil;
+							clientControl[j] !! demande_verrouillage();
+							Alarm(CommitTimer);
+					[]	dernier != nil ->
+							dernier <- clientControl[j];
+					];
+				];
+			];
+			
+	[]	TimeoutReconnection ->
+			[	pred.id = nil ->
+				[	pos = -1 ->
+							pred[] <- nil;
+							pos <- 0;
+				];
+				New jeton;
+			[]	pred.id != nil ->
+					[	pred.suivant != nil ->
+							pred.id !! CONNECTION, pred.pos;
+					[]	pred.suivant = nil ->
+							pred.id !! demande_verrouillage();
+					];
+					Alarm(CommitTimer);
+			];
+					
+					
+    []  clientControl[j] ?? ok_verrouillage(doc),pred[],pos(j) ->
+			pred[]<- [clientControl[j],pred[j][1],...,pred[j][k-1]];
+			[	pos = -1 ->
+					pos <- pos(j) + 1;
+					[	suivant != nil ->
+							suivant !! COMMIT,clientControl[i],pred[],pos(i);
+					];
+			];
+			Alarm(TokenTimer);
+			Reset alarm;
             [   docEnCours = doc ->
                     jeton <- vrai;
                     clientTrait[i] !! ok_verrouillage(doc);
@@ -37,7 +106,44 @@ clientControl[i=1..K] == (
             []  docEnCours != doc, suivant[doc] = nil ->
                     skip;
             ];
-            
+    
+	[]	TimeoutToken ->
+		[	pred[1] = nil ->
+				[	x<=k-1, pred[x] != nil ->
+						pred[x] !! CONNECTION,pred[x].pos;
+						Alarm(TokenTimer);
+				[]	x<=k-1, pred[x] = nil ->
+						pred.id <- nil;
+						pred.pos <- -1;
+						*[ j<K ->
+							clientControl[j] !! SEARCH_POSITION,pos(i),pred[];
+						];
+						Alarm(ReconnectionTimer);
+				];
+		[]	pred[1] != nil ->
+				Alarm(TokenTimer);
+	
+	[]	clientControl[j] ?? SEARCH_POSITION,pos(j),pred[] ->
+			[	pos != -1; pos < pos(j) -> 
+					clientControl[j] !! POSITION,pos(i),suivant;
+			[]	x =< k-1, pred[x] = dernier; demandeur = false ->
+					dernier <- clientControl[j];
+			];
+			
+	[]	clientControl[j] ?? POSITION,pos(j),suivant(j) ->
+			[	pred.pos < pos(j) ->
+					pred.id <- clientControl[j];
+					pred.pos <- pos(j);
+					pred.suivant <- suivant(j);
+					
+	[]	clientControl[j] ?? CONNECTION,pos(j) ->
+			[ 	pos = pos(j) ->
+					suivant <- clientControl[j];
+					clientControl[j] !! COMMIT, pred[],pos(i);
+			[]	pos != pos(j) ->
+					clientControl[j] !! ok_verrouillage();
+			];
+	
     []  serveur ?? liste(f1, f2, f3, ..., fN) ->
             clientTrait[i] !! liste(f1, f2, f3, ..., fN);
 
@@ -79,6 +185,7 @@ clientControl[i=1..K] == (
 
             [   dernier[f] != nil ->
                     dernier[f] !! demande_verrouillage(f, i);
+					Alarm(CommitTimer);
             []  dernier[f] == nil ->
                     clientTrait[i] !! ok_verrouillage(f);
             ]
@@ -90,6 +197,7 @@ clientControl[i=1..K] == (
                     skip;
             []  suivant[f] != nil ->
                     suivant[f] !! ok_verrouillage(f);
+					pos <- -1;
             ];
     ]
 )

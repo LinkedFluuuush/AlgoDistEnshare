@@ -26,6 +26,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Classe qui définit un contrôleur centralisé
@@ -137,8 +140,8 @@ public class CentralizedClientController extends AbstractClientController {
                     suivant.put(fileName, url);
                 } else {
                     RemoteControllerInterface r = (RemoteControllerInterface) Naming.lookup(dernier.get(fileName));
-
                     r.lockDocument();
+                    
                 }
             }
         } else {
@@ -152,7 +155,56 @@ public class CentralizedClientController extends AbstractClientController {
             }
         }
     }
-
+    
+    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+    	this.pred.addElement(r);
+    	 for(int i=0;i<v.size();i++){
+    		 this.pred.addElement(v.elementAt(i));
+    	 }
+    	 if(this.pos == -1){
+    		this.pos = 1 + _pos; 
+    		if(suivant.get(fileName) != null){
+    			RemoteControllerInterface R = (RemoteControllerInterface) Naming.lookup(suivant.get(fileName));
+    			R.ReceiveCommit(this, this.pred, this.pos);
+    		}
+    	 }
+    	 TokenTimer.schedule(TokenTimeout(), 1000);
+    }
+    
+    protected TimerTask TokenTimeout(){
+    	if(this.pred.elementAt(0) == null){
+    		for(int i=0;i<this.pred.size();i++){
+    			if(this.pred.elementAt(i) != null){
+    				this.pred.elementAt(i).ReceiveConnection(this, this.pred.elementAt(i).pos);
+    				TokenTimer.schedule(TokenTimeout(), 1000);
+    				break;
+    			} else {
+    				
+    			}
+    		}
+    	}
+    }
+    
+    protected TimerTask TimeoutReconnection(){
+    	
+    }
+    
+    public void ReceiveConnection(RemoteControllerInterface s, int _pos){
+    	
+    }
+    
+    public void ReceiveSearchPosition(RemoteControllerInterface s, int _pos, Vector v){
+    	
+    }
+    
+    public void ReceivePosition(RemoteControllerInterface s, int _pos, String suiv){
+    	
+    }
+    
+    public void ReceiveSearchQueue(RemoteControllerInterface s){
+    	
+    }
+    
     @Override
     public void lockDocument(){
         locked = true;
@@ -166,6 +218,8 @@ public class CentralizedClientController extends AbstractClientController {
 
             if(suivant.get(fileName) != null){
                 ((RemoteControllerInterface) Naming.lookup(suivant.get(fileName))).lockDocument();
+                pos = -1;
+                suivant = null;
             }
         }
     }
