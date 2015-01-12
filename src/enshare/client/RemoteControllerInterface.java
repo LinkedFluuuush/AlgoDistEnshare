@@ -35,7 +35,7 @@ public interface RemoteControllerInterface extends Remote {
     /**
      * Met à jour la copie du document courant
      *
-     * @param d Nouvelle version du document
+     * @param d         Nouvelle version du document
      * @param sourceUrl URL du processus expéditeur
      * @throws RemoteException Si un problème en rapport avec RMI survient
      */
@@ -53,16 +53,34 @@ public interface RemoteControllerInterface extends Remote {
      * Envoie la demande de verrouillage sur le document courant
      *
      * @param url L'url du client demandeur initial
-     * @throws RemoteException Si un problème en rapport avec RMI survient
+     * @throws RemoteException                Si un problème en rapport avec RMI survient
      * @throws java.net.MalformedURLException Si l'url de source est mal formée
-     * @throws java.rmi.NotBoundException Si l'url de source est erronnée
+     * @throws java.rmi.NotBoundException     Si l'url de source est erronnée
      */
     public void tryLockDocument(String url) throws RemoteException, MalformedURLException, NotBoundException;
 
     /**
      * Verrouille le document courant
      */
-    public void lockDocument();
+    public void lockDocument() throws RemoteException;
     
     public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
+
+    /**
+     * Change le dernier de clientUrl vers newDernier pour garantir la conservation des chaines lors d'une déconnexion
+     *
+     * @param filename   Le fichier pour lequel changer le dernier
+     * @param clientUrl  L'url du dernier actuel à changer
+     * @param newDernier Le nouveau dernier à enregistrer
+     */
+    public void setNewDernier(String filename, String clientUrl, String newDernier) throws RemoteException;
+
+    /**
+     * Change le suivant de clientUrl vers newSuivant pour garantir la conservation des chaines lors d'une déconnexion
+     *
+     * @param filename   Le fichier pour lequel changer le suivant
+     * @param clientUrl  L'url du dernier actuel à changer
+     * @param newSuivant Le nouveau suivant à enregistrer
+     */
+    public void setNewSuivant(String filename, String clientUrl, String newSuivant) throws RemoteException;
 }

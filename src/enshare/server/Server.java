@@ -108,7 +108,7 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     public synchronized void finalize() {
         Map<String, RemoteControllerInterface> copy = new HashMap(connectedNotepads);
         for (Map.Entry<String, RemoteControllerInterface> entry : copy.entrySet()) {
-            disconnectNotepad(entry.getKey());
+            disconnectNotepad(entry.getKey(), null, null);
             try {
                 entry.getValue().notifyDisconnection(url);
             } catch (RemoteException ex) {
@@ -164,25 +164,58 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     }
 
     @Override
-    public synchronized boolean connectNotepad(String clientUrl) throws RemoteException {
+    public synchronized String connectNotepad(String clientUrl) throws RemoteException {
         try {
             RemoteControllerInterface client = (RemoteControllerInterface) Naming.lookup(clientUrl);
             connectedNotepads.put(clientUrl, client);
             Logger.getLogger(Server.class.getName()).log(Level.INFO, "Connexion du notepad " + clientUrl);
-            return true;
+            if(connectedNotepads.keySet().size() == 1) {
+                return connectedNotepads.keySet().toArray()[0].toString();
+            } else {
+                if(connectedNotepads.keySet().toArray()[0].toString().equals(clientUrl)){
+                    return connectedNotepads.keySet().toArray()[1].toString();
+                } else {
+                    return connectedNotepads.keySet().toArray()[0].toString();
+                }
+            }
         } catch (NotBoundException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         } catch (MalformedURLException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return null;
         }
     }
 
     @Override
-    public synchronized void disconnectNotepad(String clientUrl) {
+    public synchronized void disconnectNotepad(String clientUrl, HashMap<String, String> clientDernier,  HashMap<String, String> clientSuivant) {
         closeAllDocuments(clientUrl);
         connectedNotepads.remove(clientUrl);
+        String newDernier;
+        String newSuivant;
+
+        for(String filename : clientDernier.keySet()){
+            newDernier = clientDernier.get(filename);
+            for(String url : connectedNotepads.keySet()){
+                try {
+                    connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        for(String filename : clientSuivant.keySet()){
+            newSuivant = clientSuivant.get(filename);
+            for(String url : connectedNotepads.keySet()){
+                try {
+                    connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         Logger.getLogger(Server.class.getName()).log(Level.INFO, "Déconnexion du notepad " + clientUrl);
     }
 
@@ -363,7 +396,7 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
                             controller.updateDocument(url, storedDocuments.get(targetFileName).getDocument());
                         } catch (ConnectException ex) {
                             // Supprimer le client s'il n'existe plus
-                            disconnectNotepad(clientUrl);
+                            disconnectNotepad(clientUrl, null, null);
                         } catch (RemoteException ex) {
                             System.err.println("ERREUR: Impossible de notifier le controleur " + clientUrl);
                             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);

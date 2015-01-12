@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -34,10 +35,10 @@ public interface ServerInterface extends Remote {
      * Tente de connecter un client
      *
      * @param clientUrl URL du client demandeur
-     * @return vrai si la connexion a réussie, faux sinon
+     * @return L'adresse du dernier à la création sur chaque fichier
      * @throws RemoteException Si un problème en rapport avec RMI survient
      */
-    public boolean connectNotepad(String clientUrl) throws RemoteException;
+    public String connectNotepad(String clientUrl) throws RemoteException;
 
     /**
      * Déconnecte un client
@@ -45,7 +46,7 @@ public interface ServerInterface extends Remote {
      * @param clientUrl URL du client demandeur
      * @throws RemoteException Si un problème en rapport avec RMI survient
      */
-    public void disconnectNotepad(String clientUrl) throws RemoteException;
+    public void disconnectNotepad(String clientUrl, HashMap<String, String> clientDernier,  HashMap<String, String> clientSuivant) throws RemoteException;
 
     /**
      * Retourne la liste des noms des documents disponibles
