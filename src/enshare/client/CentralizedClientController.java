@@ -62,7 +62,7 @@ public class CentralizedClientController extends AbstractClientController {
     public synchronized void finalize() {
         super.finalize();
         try {
-            server.disconnectNotepad(url);
+            server.disconnectNotepad(url, dernier, suivant);
             Naming.unbind(url);
         } catch (RemoteException ex) {
             /* Nothing */
@@ -183,4 +183,17 @@ public class CentralizedClientController extends AbstractClientController {
         locked = false;
     }
 
+    @Override
+    public void setNewDernier(String filename, String clientUrl, String newDernier){
+        if(dernier.get(filename).equals(clientUrl)){
+            dernier.put(filename, newDernier);
+        }
+    }
+
+    @Override
+    public void setNewSuivant(String filename, String clientUrl, String newSuivant){
+        if(suivant.get(filename).equals(clientUrl)){
+            suivant.put(filename, newSuivant);
+        }
+    }
 }

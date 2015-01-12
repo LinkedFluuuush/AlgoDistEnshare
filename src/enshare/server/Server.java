@@ -108,7 +108,7 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     public synchronized void finalize() {
         Map<String, RemoteControllerInterface> copy = new HashMap(connectedNotepads);
         for (Map.Entry<String, RemoteControllerInterface> entry : copy.entrySet()) {
-            disconnectNotepad(entry.getKey());
+            disconnectNotepad(entry.getKey(), null, null);
             try {
                 entry.getValue().notifyDisconnection(url);
             } catch (RemoteException ex) {
@@ -180,9 +180,26 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     }
 
     @Override
-    public synchronized void disconnectNotepad(String clientUrl) {
+    public synchronized void disconnectNotepad(String clientUrl, HashMap<String, String> clientDernier,  HashMap<String, String> clientSuivant) {
         closeAllDocuments(clientUrl);
         connectedNotepads.remove(clientUrl);
+        String newDernier;
+        String newSuivant;
+
+        for(String filename : clientDernier.keySet()){
+            newDernier = clientDernier.get(filename);
+            for(String url : connectedNotepads.keySet()){
+                connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
+            }
+        }
+
+        for(String filename : clientSuivant.keySet()){
+            newSuivant = clientSuivant.get(filename);
+            for(String url : connectedNotepads.keySet()){
+                connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
+            }
+        }
+
         Logger.getLogger(Server.class.getName()).log(Level.INFO, "Déconnexion du notepad " + clientUrl);
     }
 
@@ -363,7 +380,7 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
                             controller.updateDocument(url, storedDocuments.get(targetFileName).getDocument());
                         } catch (ConnectException ex) {
                             // Supprimer le client s'il n'existe plus
-                            disconnectNotepad(clientUrl);
+                            disconnectNotepad(clientUrl, null, null);
                         } catch (RemoteException ex) {
                             System.err.println("ERREUR: Impossible de notifier le controleur " + clientUrl);
                             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
