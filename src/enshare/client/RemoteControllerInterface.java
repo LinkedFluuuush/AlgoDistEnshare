@@ -16,6 +16,10 @@
 package enshare.client;
 
 import document.DocumentInterface;
+
+import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -43,4 +47,19 @@ public interface RemoteControllerInterface extends Remote {
      * @throws RemoteException Si un problème en rapport avec RMI survient
      */
     public void notifyDisconnection(String sourceUrl) throws RemoteException;
+
+    /**
+     * Envoie la demande de verrouillage sur le document courant
+     *
+     * @param url L'url du client demandeur initial
+     * @throws RemoteException Si un problème en rapport avec RMI survient
+     * @throws java.net.MalformedURLException Si l'url de source est mal formée
+     * @throws java.rmi.NotBoundException Si l'url de source est erronnée
+     */
+    public void tryLockDocument(String url) throws RemoteException, MalformedURLException, NotBoundException;
+
+    /**
+     * Verrouille le document courant
+     */
+    public void lockDocument();
 }

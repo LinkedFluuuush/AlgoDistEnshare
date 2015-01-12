@@ -18,7 +18,9 @@ package enshare.client;
 import document.ObservableDocument;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -57,7 +59,7 @@ public interface LocalControllerInterface {
      * @throws RemoteException Si un problème en rapport avec RMI survient
      * @throws FileNotFoundException Si le nom de fichier n'a pas été trouvé
      */
-    public void openDocument(String _fileName) throws RemoteException, FileNotFoundException;
+    public void openDocument(String _fileName) throws RemoteException, FileNotFoundException, MalformedURLException, NotBoundException;
 
     /**
      * Ferme le document courant
@@ -65,7 +67,7 @@ public interface LocalControllerInterface {
      * @throws RemoteException Si un problème en rapport avec RMI survient
      * @throws FileNotFoundException Si le document actuel n'a pas été trouvé
      */
-    public void closeDocument() throws RemoteException, FileNotFoundException;
+    public void closeDocument() throws RemoteException, FileNotFoundException, MalformedURLException, NotBoundException;
 
     /**
      * Sauvegarde la copie du document courant
@@ -80,25 +82,20 @@ public interface LocalControllerInterface {
      * Sauvegarde la copie du document courant dans un nouveau fichier
      *
      * @param _fileName Nom du nouveau document
-     * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileAlreadyExistsException Si le nom demandé existe déjà pour un
-     * autre fichier
      * @throws IOException Si une erreur survient lors de l'écriture du document
      * sur le disque
      */
-    public void saveDocumentAs(String _fileName) throws RemoteException, FileAlreadyExistsException, IOException;
+    public void saveDocumentAs(String _fileName) throws IOException, NotBoundException;
 
     /**
      * Crée et ouvre un nouveau document
      * <p>Remarque: le document sera mis en lecture seule initialement.</p>
      *
      * @param _fileName Nom du nouveau document
-     * @throws FileAlreadyExistsException Si le nom demandé existe déjà pour un
-     * autre fichier
      * @throws IOException Si une erreur survient lors de la création du nouveau
      * document sur le disque
      */
-    public void newDocument(String _fileName) throws FileAlreadyExistsException, IOException;
+    public void newDocument(String _fileName) throws IOException;
 
     /**
      * Teste si l'état actuel est "verrouillé"'
@@ -108,20 +105,12 @@ public interface LocalControllerInterface {
     public boolean isLocked();
 
     /**
-     * Essaie de verrouiller le document courant
-     *
-     * @return L'état du verrouillage après la demande
-     * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileNotFoundException Si le document n'a pas été trouvé
-     */
-    public boolean tryLockDocument() throws RemoteException, FileNotFoundException;
-
-    /**
      * Déverrouille le document courant
      *
      * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileNotFoundException Si le document actuel n'a pas été trouvé
+     * @throws java.net.MalformedURLException
+     * @throws java.rmi.NotBoundException
      */
-    public void unlockDocument() throws RemoteException, FileNotFoundException;
+    public void unlockDocument() throws RemoteException, MalformedURLException, NotBoundException;
 
 }

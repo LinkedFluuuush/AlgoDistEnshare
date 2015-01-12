@@ -51,7 +51,7 @@ public interface DocumentInterface extends Serializable {
 
     /**
      * Récupère la ligne courante
-     * @return
+     * @return la ligne courante
      */
     public LineInterface getLine();
 
