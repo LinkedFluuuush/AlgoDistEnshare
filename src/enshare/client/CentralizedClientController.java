@@ -199,14 +199,14 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public void setNewDernier (String filename, String clientUrl, String newDernier)  throws RemoteException{
-        if(dernier.get(filename).equals(clientUrl)){
+        if(clientUrl.equals(dernier.get(filename))){
             dernier.put(filename, newDernier);
         }
     }
 
     @Override
     public void setNewSuivant (String filename, String clientUrl, String newSuivant)  throws RemoteException{
-        if(suivant.get(filename).equals(clientUrl)){
+        if(clientUrl.equals(suivant.get(filename))){
             suivant.put(filename, newSuivant);
         }
     }
