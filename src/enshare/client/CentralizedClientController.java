@@ -16,6 +16,7 @@
 package enshare.client;
 
 import enshare.server.ServerInterface;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -167,7 +168,7 @@ public class CentralizedClientController extends AbstractClientController {
         }
     }
     
-    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String, HashMap<String,Integer>> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
     	this.pred.addElement(r);
     	 for(int i=0;i<v.size();i++){
     		 this.pred.addElement(v.elementAt(i));
@@ -193,6 +194,8 @@ public class CentralizedClientController extends AbstractClientController {
     				
     			}
     		}
+    	} else {
+    		
     	}
     }
     
@@ -209,12 +212,21 @@ public class CentralizedClientController extends AbstractClientController {
     }
     
     public void ReceivePosition(RemoteControllerInterface s, int _pos, String suiv){
-    	
+    	if(){
+    		
+    	}
     }
     
     public void ReceiveSearchQueue(RemoteControllerInterface s){
     	
     }
+    
+    protected TimerTask TimeoutCommit(){
+    	suivant = null;
+    	dernier = null;
+    	
+    }
+    
     
     @Override
     public void lockDocument()  throws RemoteException {
