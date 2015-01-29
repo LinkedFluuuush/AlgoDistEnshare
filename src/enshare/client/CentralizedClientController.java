@@ -25,11 +25,6 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -187,42 +182,53 @@ public class CentralizedClientController extends AbstractClientController {
      * @throws MalformedURLException
      * @throws NotBoundException
      */
-    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String,LinkedList<String[]>> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
-    	this.pred.put(r, _pos);
-    	Iterator iter = v.keySet().iterator();
-
-    	while(iter.hasNext()){
-    	  Object key = iter.next();
-    	  this.pred.put(key, v.get(key));
-    	}
+    public void ReceiveCommit(String _fileName, String _url, HashMap<String,LinkedList<String[]>> _pred, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+    	String premierPred[] = new String[2];
+    	premierPred[0] = _url;
+    	premierPred[1] = String.valueOf(_pos);
+    	this.pred.put(_fileName, this.pred.get().addFirst(premierPred));
+    	Iterator<String[]> itPred = _pred.get(_fileName).iterator();
+    	String Pred[] = new String[2];
+    	while(itPred.hasNext())
+		{
+    		Pred = (String[]) itPred.next();
+    		this.pred.get(_fileName).add(Pred);
+		}
     	 if(this.pos == -1){
     		this.pos = 1 + _pos; 
     		if(suivant.get(fileName) != null){
     			RemoteControllerInterface R = (RemoteControllerInterface) Naming.lookup(suivant.get(fileName));
-    			R.ReceiveCommit(this, this.pred, this.pos);
+    			R.ReceiveCommit(_fileName, this.getUrl(), this.pred, this.pos);
     		}
     	 }
-    	 TokenTimer.schedule(TokenTimeout(), 1000);
+    	 TokenTimer.schedule(TokenTimeout(_fileName), 1000);
     }
     
     /**
      * M�thode qui se d�clenche lorsque l'on a pas re�u le jeton � temps 
      * @return
+     * @throws NotBoundException 
+     * @throws RemoteException 
+     * @throws MalformedURLException 
      */
-    protected TimerTask TokenTimeout(){
-    	if(this.pred.elementAt(0) == null){
-    		for(int i=0;i<this.pred.size();i++){
-    			if(this.pred.elementAt(i) != null){
-    				this.pred.elementAt(i).ReceiveConnection(this, this.pred.elementAt(i).pos);
-    				TokenTimer.schedule(TokenTimeout(), 1000);
-    				break;
+    protected TimerTask TokenTimeout(String _fileName) throws MalformedURLException, RemoteException, NotBoundException{
+    	if(this.pred.get(_fileName).getFirst() == null){
+    		Iterator<String[]> itPred = this.pred.get(_fileName).iterator();
+        	String Pred[] = new String[2];
+    			if(itPred.hasNext()){
+    				Pred = (String[]) itPred.next();
+    				RemoteControllerInterface R = (RemoteControllerInterface) Naming.lookup(Pred[0]);
+    				R.ReceiveConnection(this, _fileName, this.pos);
+    				TokenTimer.schedule(TokenTimeout(_fileName), 1000);
+    				
     			} else {
     				
+    	        	
     				ReconnectionTimer.schedule(TimeoutReconnection(), 1000);
     			}
-    		}
+    		
     	} else {
-    		TokenTimer.schedule(TokenTimeout(), 1000);
+    		TokenTimer.schedule(TokenTimeout(_fileName), 1000);
     	}
     }
     
@@ -231,32 +237,56 @@ public class CentralizedClientController extends AbstractClientController {
     	
     }
     
-    public void ReceiveConnection(RemoteControllerInterface s, int _pos){
-    	
+    public void ReceiveConnection(CentralizedClientController s, String _fileName, int _pos){
+    	if(this.pos == _pos){
+    		suivant.put(_fileName, s.getUrl());
+    		try {
+				s.ReceiveCommit(_fileName, this.getUrl(), this.pred, this.pos);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}
+    	} else {
+    		try {
+				s.lockDocument();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+    	}
     }
     
-    public void ReceiveSearchPosition(RemoteControllerInterface s, int _pos, HashMap<String,Integer> v){
+    public void ReceiveSearchPosition(CentralizedClientController s, int _pos, HashMap<String,LinkedList<String[]>> faultyPred, String _fileName){
     	if((this.pos != -1) && (this.pos < _pos)){
-    		s.ReceivePosition(this, this.pos, this.suivant.get(fileName));
+    		s.ReceivePosition(this, this.pos, this.suivant.get(_fileName), _fileName);
     	}
-    	if(!demandeur){
-    		
+    	Iterator<String[]> itPred = faultyPred.get(_fileName).iterator();
+    	String Pred[] = new String[2];
+    	if(itPred.hasNext()){
+			Pred = (String[]) itPred.next();
+			if((this.suivant.get(_fileName) == Pred[0]) && !demandeur){
+				this.suivant.put(_fileName, s.getUrl());
+			}
     	}
     }
     
-    public void ReceivePosition(RemoteControllerInterface s, int _pos, RemoteControllerInterface suiv){
-    	if(){
+    public void ReceivePosition(CentralizedClientController s, int _pos, String suiv, String _fileName){
+    	if(this.pred.get(_fileName).){
     		
     	}
     }
     
     public void ReceiveSearchQueue(RemoteControllerInterface s){
     	
-    }*/
+    }
     
     protected TimerTask TimeoutCommit(){
+    	
     	suivant = null;
     	dernier = null;
+    	ReconnectionTimer.schedule(TimeoutReconnection(), 1000);
     	
     }
     

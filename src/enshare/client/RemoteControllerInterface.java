@@ -66,7 +66,9 @@ public interface RemoteControllerInterface extends Remote {
      */
     public void lockDocument() throws RemoteException;
     
-    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String,LinkedList<String[]>> v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
+    public void ReceiveCommit(String _fileName, String _url, HashMap<String,LinkedList<String[]>> v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
+    
+    public void ReceiveConnection(CentralizedClientController s, String _fileName, int _pos);
 
     /**
      * Change le dernier de clientUrl vers newDernier pour garantir la conservation des chaines lors d'une déconnexion
