@@ -70,12 +70,6 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
     protected Map<String, Set<RemoteControllerInterface>> readers;
 
     /**
-     * Table associant chaque <b>nom de fichier</b> à la <b>file des
-     * écrivains</b>
-     */
-    protected Map<String, BlockingQueue<RemoteControllerInterface>> writers;
-
-    /**
      * Constructeur
      *
      * @param _url URL du serveur
@@ -91,7 +85,6 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
         connectedNotepads = new HashMap();
         dirName = _dirName;
         storedDocuments = new HashMap();
-        writers = new HashMap();
         readers = new HashMap();
         loadDirectory();
         ServerInterface stub = (ServerInterface) UnicastRemoteObject.exportObject(this, 0);
@@ -136,7 +129,6 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
                 try {
                     storedDocuments.put(fileEntry.getName(), new StorableDocument(fileEntry.getPath()));
                     Logger.getLogger(Server.class.getName()).log(Level.INFO, "Document " + fileEntry.getName() + " chargé");
-                    writers.put(fileEntry.getName(), new ArrayBlockingQueue(1));
                     readers.put(fileEntry.getName(), new HashSet());
                 } catch (IOException ex) {
                     /* Nothing */
@@ -194,24 +186,28 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
         String newDernier;
         String newSuivant;
 
-        for(String filename : clientDernier.keySet()){
-            newDernier = clientDernier.get(filename);
-            for(String url : connectedNotepads.keySet()){
-                try {
-                    connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+        if(clientDernier != null) {
+            for (String filename : clientDernier.keySet()) {
+                newDernier = clientDernier.get(filename);
+                for (String url : connectedNotepads.keySet()) {
+                    try {
+                        connectedNotepads.get(url).setNewDernier(filename, clientUrl, newDernier);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
 
-        for(String filename : clientSuivant.keySet()){
-            newSuivant = clientSuivant.get(filename);
-            for(String url : connectedNotepads.keySet()){
-                try {
-                    connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+        if(clientSuivant != null) {
+            for (String filename : clientSuivant.keySet()) {
+                newSuivant = clientSuivant.get(filename);
+                for (String url : connectedNotepads.keySet()) {
+                    try {
+                        connectedNotepads.get(url).setNewSuivant(filename, clientUrl, newSuivant);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -265,8 +261,6 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
             RemoteControllerInterface controller = connectedNotepads.get(clientUrl);
             // Retirer de la liste des lecteurs
             readers.get(targetFileName).remove(controller);
-            // Essaie de supprimer de la liste des écrivains
-            unlockDocument(clientUrl, targetFileName, d);
             if (readers.get(targetFileName).isEmpty()) {
                 try {
                     // Recharger la dernière version sauvegardée (-> perte des changements non sauvegardés)
@@ -293,10 +287,6 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
             if (s.contains(controller)) {
                 readers.get(fileName).remove(controller);
                 // Retirer aussi de la liste des écrivant si besoin
-                if (writers.get(fileName).contains(controller)) {
-                    writers.get(fileName).poll();
-                    Logger.getLogger(Server.class.getName()).log(Level.INFO, "Déverrouillage du document " + fileName + " pour notepad " + clientUrl);
-                }
                 Logger.getLogger(Server.class.getName()).log(Level.INFO, "Fermeture du document " + fileName + " pour notepad " + clientUrl);
             }
         }
@@ -304,26 +294,16 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
 
     @Override
     public synchronized DocumentInterface newDocument(String clientUrl, String targetFileName) throws RemoteException, FileAlreadyExistsException, IOException {
-        return newDocument(clientUrl, targetFileName, false);
-    }
-
-    @Override
-    public synchronized DocumentInterface newDocument(String clientUrl, String targetFileName, boolean isLocked) throws RemoteException, FileAlreadyExistsException, IOException {
         if (existingFileName(targetFileName)) {
             throw new FileAlreadyExistsException("Le nom " + targetFileName + " est déjà utilisé par un autre fichier.");
         }
         StorableDocument sd = new StorableDocument(dirName + separator + targetFileName, new Document());
         sd.save();
         storedDocuments.put(targetFileName, sd);
-        writers.put(targetFileName, new ArrayBlockingQueue(1));
         readers.put(targetFileName, new HashSet());
         Logger.getLogger(Server.class.getName()).log(Level.INFO, "Nouveau document " + targetFileName);
         // Ouverture en mode lecture
         DocumentInterface returned_document = getDocument(clientUrl, targetFileName);
-        if (isLocked) {
-            // Ouverture en mode écriture
-            tryLockDocument(clientUrl, targetFileName);
-        }
         return returned_document;
     }
 
@@ -332,50 +312,18 @@ public class Server extends AbstractIdentifiable implements ServerInterface {
         StorableDocument sd = storedDocuments.get(targetFileName);
         if (sd != null) {
             RemoteControllerInterface controller = connectedNotepads.get(clientUrl);
-            if (writers.get(targetFileName).contains(controller)) {
-                Logger.getLogger(Server.class.getName()).log(Level.INFO, "Modification du document " + targetFileName);
-                sd.setDocument(d);
-                notifyModificationToClients(targetFileName, controller);
-                try {
-                    sd.save();
-                    Logger.getLogger(Server.class.getName()).log(Level.INFO, "Document " + targetFileName + " sauvergardé");
-                } catch (IOException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return true;
+            Logger.getLogger(Server.class.getName()).log(Level.INFO, "Modification du document " + targetFileName);
+            sd.setDocument(d);
+            notifyModificationToClients(targetFileName, controller);
+            try {
+                sd.save();
+                Logger.getLogger(Server.class.getName()).log(Level.INFO, "Document " + targetFileName + " sauvergardé");
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
+            return true;
         }
         return false;
-    }
-
-    @Override
-    public synchronized boolean tryLockDocument(String clientUrl, String targetFileName) throws RemoteException, FileNotFoundException {
-        if (storedDocuments.containsKey(targetFileName)) {
-            RemoteControllerInterface controller = connectedNotepads.get(clientUrl);
-            if (readers.get(targetFileName).contains(controller) && writers.get(targetFileName).offer(controller)) {
-                Logger.getLogger(Server.class.getName()).log(Level.INFO, "Notepad " + clientUrl + " verrouille document " + targetFileName);
-                return true;
-            } else {
-                Logger.getLogger(Server.class.getName()).log(Level.INFO, "Notepad " + clientUrl + " échoue à verrouiller document " + targetFileName);
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public synchronized void unlockDocument(String clientUrl, String targetFileName, DocumentInterface d) throws RemoteException, FileNotFoundException {
-        StorableDocument sd = storedDocuments.get(targetFileName);
-        if (sd != null) {
-            RemoteControllerInterface controller = connectedNotepads.get(clientUrl);
-            // Nothing happens if controller was not in the blocking queue
-            if (writers.get(targetFileName).remove(controller)) {
-                sd.setDocument(d);
-                notifyModificationToClients(targetFileName, controller);
-                Logger.getLogger(Server.class.getName()).log(Level.INFO, "Notepad " + clientUrl + " déverrouille document " + targetFileName);
-            }
-        }
     }
 
     /**

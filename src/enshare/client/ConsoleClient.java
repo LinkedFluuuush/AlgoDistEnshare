@@ -39,7 +39,7 @@ public class ConsoleClient {
      * @param args Arguments de la ligne de commande
      */
     public static void main(String[] args) throws RemoteException, FileNotFoundException, NotBoundException, MalformedURLException {
-        String my_url = args[0];
+        /*String my_url = args[0];
         String server_url = args[1];
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (System.getSecurityManager() == null) {
@@ -80,6 +80,7 @@ public class ConsoleClient {
         } else {
             System.out.println("Échec de la connexion");
         }
+        */
     }
 
 }

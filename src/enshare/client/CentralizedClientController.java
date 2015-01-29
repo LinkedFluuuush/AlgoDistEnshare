@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.*;
@@ -84,6 +85,13 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public synchronized List<String> getDocumentList() throws RemoteException {
+        try {
+            unlockDocument();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
         List<String> documentList = server.getDocumentList();
         dernier = new HashMap<String, String>();
         suivant = new HashMap<String, String>();
@@ -169,6 +177,7 @@ public class CentralizedClientController extends AbstractClientController {
             }
         }
     }
+
     /**
      * M�thode qui se d�clenche lorsque l'on re�oit un message COMMIT de la racine
      * @param r
@@ -243,7 +252,7 @@ public class CentralizedClientController extends AbstractClientController {
     
     public void ReceiveSearchQueue(RemoteControllerInterface s){
     	
-    }
+    }*/
     
     protected TimerTask TimeoutCommit(){
     	suivant = null;
@@ -275,7 +284,16 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     protected synchronized void newDocument(String _fileName, boolean _isLocked) throws IOException {
-        observedDocument.setDocument(server.newDocument(url, _fileName, _isLocked));
+        observedDocument.setDocument(server.newDocument(url, _fileName));
+
+        dernier.put(_fileName, null);
+        suivant.put(_fileName, null);
+
+        if(_isLocked){
+            demandeur = true;
+            locked = true;
+        }
+
         setFileName(_fileName);
     }
 
