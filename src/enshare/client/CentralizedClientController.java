@@ -26,6 +26,7 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -169,7 +170,7 @@ public class CentralizedClientController extends AbstractClientController {
         }
     }
     /**
-     * Méthode qui se déclenche lorsque l'on reçoit un message COMMIT de la racine
+     * Mï¿½thode qui se dï¿½clenche lorsque l'on reï¿½oit un message COMMIT de la racine
      * @param r
      * @param v
      * @param _pos
@@ -177,7 +178,7 @@ public class CentralizedClientController extends AbstractClientController {
      * @throws MalformedURLException
      * @throws NotBoundException
      */
-    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String,Integer> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String,LinkedList<String[]>> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
     	this.pred.put(r, _pos);
     	Iterator iter = v.keySet().iterator();
 
@@ -196,7 +197,7 @@ public class CentralizedClientController extends AbstractClientController {
     }
     
     /**
-     * Méthode qui se déclenche lorsque l'on a pas reçu le jeton à temps 
+     * Mï¿½thode qui se dï¿½clenche lorsque l'on a pas reï¿½u le jeton ï¿½ temps 
      * @return
      */
     protected TimerTask TokenTimeout(){
@@ -226,7 +227,7 @@ public class CentralizedClientController extends AbstractClientController {
     }
     
     public void ReceiveSearchPosition(RemoteControllerInterface s, int _pos, HashMap<String,Integer> v){
-    	if((this.pos != -1) &&(this.pos < _pos)){
+    	if((this.pos != -1) && (this.pos < _pos)){
     		s.ReceivePosition(this, this.pos, this.suivant.get(fileName));
     	}
     	if(!demandeur){

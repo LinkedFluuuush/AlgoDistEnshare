@@ -29,6 +29,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.LinkedList;
 import java.util.Vector;
 import java.util.Timer;
 
@@ -76,7 +77,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     /**
      * Tableau des prédécesseurs
      */
-    protected HashMap<RemoteControllerInterface,Integer> pred;
+    protected HashMap<String,LinkedList<String[]>> pred;
     
     /**
      * Temporisateur pour détecter la perte d'une requête
@@ -108,7 +109,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
         CommitTimer = new Timer();
         TokenTimer = new Timer();
         ReconnectionTimer = new Timer();
-        pred = new HashMap<String, HashMap<String,Integer>>();
+        pred = new HashMap<String,LinkedList<String[]>>();
         locked = false;
         demandeur = false;
         dernier = null;
