@@ -76,7 +76,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
     /**
      * Tableau des prédécesseurs
      */
-    protected HashMap<String, HashMap<String,Integer>> pred;
+    protected HashMap<RemoteControllerInterface,Integer> pred;
     
     /**
      * Temporisateur pour détecter la perte d'une requête

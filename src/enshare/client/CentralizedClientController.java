@@ -31,6 +31,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.*;
 
 /**
  * Classe qui d√©finit un contr√¥leur centralis√©
@@ -167,12 +168,23 @@ public class CentralizedClientController extends AbstractClientController {
             }
         }
     }
-    
-    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String, HashMap<String,Integer>> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
-    	this.pred.addElement(r);
-    	 for(int i=0;i<v.size();i++){
-    		 this.pred.addElement(v.elementAt(i));
-    	 }
+    /**
+     * MÈthode qui se dÈclenche lorsque l'on reÁoit un message COMMIT de la racine
+     * @param r
+     * @param v
+     * @param _pos
+     * @throws RemoteException
+     * @throws MalformedURLException
+     * @throws NotBoundException
+     */
+    public void ReceiveCommit(RemoteControllerInterface r, HashMap<String,Integer> v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+    	this.pred.put(r, _pos);
+    	Iterator iter = v.keySet().iterator();
+
+    	while(iter.hasNext()){
+    	  Object key = iter.next();
+    	  this.pred.put(key, v.get(key));
+    	}
     	 if(this.pos == -1){
     		this.pos = 1 + _pos; 
     		if(suivant.get(fileName) != null){
@@ -183,6 +195,10 @@ public class CentralizedClientController extends AbstractClientController {
     	 TokenTimer.schedule(TokenTimeout(), 1000);
     }
     
+    /**
+     * MÈthode qui se dÈclenche lorsque l'on a pas reÁu le jeton ‡ temps 
+     * @return
+     */
     protected TimerTask TokenTimeout(){
     	if(this.pred.elementAt(0) == null){
     		for(int i=0;i<this.pred.size();i++){
@@ -192,12 +208,14 @@ public class CentralizedClientController extends AbstractClientController {
     				break;
     			} else {
     				
+    				ReconnectionTimer.schedule(TimeoutReconnection(), 1000);
     			}
     		}
     	} else {
-    		
+    		TokenTimer.schedule(TokenTimeout(), 1000);
     	}
     }
+    
     
     protected TimerTask TimeoutReconnection(){
     	
@@ -207,11 +225,16 @@ public class CentralizedClientController extends AbstractClientController {
     	
     }
     
-    public void ReceiveSearchPosition(RemoteControllerInterface s, int _pos, Vector v){
-    	
+    public void ReceiveSearchPosition(RemoteControllerInterface s, int _pos, HashMap<String,Integer> v){
+    	if((this.pos != -1) &&(this.pos < _pos)){
+    		s.ReceivePosition(this, this.pos, this.suivant.get(fileName));
+    	}
+    	if(!demandeur){
+    		
+    	}
     }
     
-    public void ReceivePosition(RemoteControllerInterface s, int _pos, String suiv){
+    public void ReceivePosition(RemoteControllerInterface s, int _pos, RemoteControllerInterface suiv){
     	if(){
     		
     	}
