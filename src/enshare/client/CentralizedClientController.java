@@ -24,10 +24,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +78,13 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     public synchronized List<String> getDocumentList() throws RemoteException {
+        try {
+            unlockDocument();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
         List<String> documentList = server.getDocumentList();
         dernier = new HashMap<String, String>();
         suivant = new HashMap<String, String>();
@@ -167,7 +171,7 @@ public class CentralizedClientController extends AbstractClientController {
         }
     }
     
-    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+/*    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
     	this.pred.addElement(r);
     	 for(int i=0;i<v.size();i++){
     		 this.pred.addElement(v.elementAt(i));
@@ -214,7 +218,7 @@ public class CentralizedClientController extends AbstractClientController {
     
     public void ReceiveSearchQueue(RemoteControllerInterface s){
     	
-    }
+    }*/
     
     @Override
     public void lockDocument()  throws RemoteException {
@@ -239,7 +243,16 @@ public class CentralizedClientController extends AbstractClientController {
 
     @Override
     protected synchronized void newDocument(String _fileName, boolean _isLocked) throws IOException {
-        observedDocument.setDocument(server.newDocument(url, _fileName, _isLocked));
+        observedDocument.setDocument(server.newDocument(url, _fileName));
+
+        dernier.put(_fileName, null);
+        suivant.put(_fileName, null);
+
+        if(_isLocked){
+            demandeur = true;
+            locked = true;
+        }
+
         setFileName(_fileName);
     }
 

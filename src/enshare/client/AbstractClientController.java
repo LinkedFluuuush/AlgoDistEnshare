@@ -108,7 +108,7 @@ public abstract class AbstractClientController extends AbstractIdentifiable impl
         CommitTimer = new Timer();
         TokenTimer = new Timer();
         ReconnectionTimer = new Timer();
-        pred = new Vector();
+        //pred = new Vector();
         locked = false;
         demandeur = false;
         dernier = null;

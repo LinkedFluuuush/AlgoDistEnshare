@@ -82,11 +82,9 @@ public interface ServerInterface extends Remote {
     public void closeDocument(String clientUrl, String targetFileName, DocumentInterface d) throws RemoteException, FileNotFoundException;
 
     /**
-     * Crée un nouveau document vide et l'ouvre en lecture pour le client
+     * Crée un nouveau document vide et l'ouvre en écriture pour le client
      * demandeur de la création
      * <p>
-     * Remarque: cette version de la méthode ne permet pas d'ouvrir en écriture
-     * le document lors de sa création.</p>
      *
      * @param clientUrl URL du client demandeur
      * @param targetFileName Nom du document à créer
@@ -99,23 +97,6 @@ public interface ServerInterface extends Remote {
     public DocumentInterface newDocument(String clientUrl, String targetFileName) throws RemoteException, FileAlreadyExistsException, IOException;
 
     /**
-     * Crée un nouveau document vide et l'ouvre en lecture pour le client
-     * demandeur de la création, avec la <b>possibilité de verrouiller le
-     * fichier en écriture dès sa création</b>
-     *
-     * @param clientUrl URL du client demandeur
-     * @param targetFileName Nom du document à créer
-     * @param isLocked Vrai si le document doit initialement être verrouillé,
-     * faux sinon
-     * @return L'interface du nouveau document vierge
-     * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileAlreadyExistsException Si le nom de fichier existe déjà
-     * @throws IOException Si une erreur est rencontré lors des entrées/sorties
-     * sur le disque (notamment l'écriture du nouveau fichier)
-     */
-    public DocumentInterface newDocument(String clientUrl, String targetFileName, boolean isLocked) throws RemoteException, FileAlreadyExistsException, IOException;
-
-    /**
      * Met à jour l'image mémoire d'un document et la sauvegarde sur le disque
      *
      * @param clientUrl URL du client demandeur
@@ -125,28 +106,4 @@ public interface ServerInterface extends Remote {
      * @throws RemoteException Si un problème en rapport avec RMI survient
      */
     public boolean saveDocument(String clientUrl, String targetFileName, DocumentInterface d) throws RemoteException;
-
-    /**
-     * Essaie de verrouiller un document pour obtenir le droit d'écriture sur
-     * celui-ci
-     *
-     * @param clientUrl URL du client demandeur
-     * @param targetFileName Nom du document à verrouiller
-     * @return Vrai si le verrouillage a été accepté, faux sinon.
-     * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileNotFoundException Si le nom de fichier demandé n'existe pas
-     */
-    public boolean tryLockDocument(String clientUrl, String targetFileName) throws RemoteException, FileNotFoundException;
-
-    /**
-     * Déverrouille un document
-     *
-     * @param clientUrl URL du client demandeur
-     * @param targetFileName Nom du document à déverrouiller
-     * @param d Copie du document chez le client
-     * @throws RemoteException Si un problème en rapport avec RMI survient
-     * @throws FileNotFoundException Si le nom de fichier demandé n'existe pas
-     */
-    public void unlockDocument(String clientUrl, String targetFileName, DocumentInterface d) throws RemoteException, FileNotFoundException;
-
 }

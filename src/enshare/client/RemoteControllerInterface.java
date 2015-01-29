@@ -64,7 +64,7 @@ public interface RemoteControllerInterface extends Remote {
      */
     public void lockDocument() throws RemoteException;
     
-    public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
+    //public void ReceiveCommit(RemoteControllerInterface r, Vector v, int _pos) throws RemoteException,MalformedURLException, NotBoundException;
 
     /**
      * Change le dernier de clientUrl vers newDernier pour garantir la conservation des chaines lors d'une déconnexion
