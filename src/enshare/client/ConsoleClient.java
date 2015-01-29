@@ -25,6 +25,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Classe de test automatique en console d'un client
@@ -39,7 +40,7 @@ public class ConsoleClient {
      * @param args Arguments de la ligne de commande
      */
     public static void main(String[] args) throws RemoteException, FileNotFoundException, NotBoundException, MalformedURLException {
-        /*String my_url = args[0];
+        String my_url = args[0];
         String server_url = args[1];
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (System.getSecurityManager() == null) {
@@ -48,39 +49,40 @@ public class ConsoleClient {
         ServerInterface server = (ServerInterface) Naming.lookup(server_url);
         CentralizedClientController controller = new CentralizedClientController(my_url, server);
 
-        if (server.connectNotepad(my_url) != null) {
-            System.out.println("Connexion réussie");
+        List<String> documentList = controller.getDocumentList();
+        if(documentList.size() != 0){
+            String fileName = documentList.get(0);
 
-            DocumentInterface d;
-            try {
-                d = server.newDocument(my_url, "f.txt");
-            } catch (IOException ex) {
-                System.err.println("Failed: " + ex.getMessage());
-            }
-            d = server.getDocument(my_url, "f.txt");
-            System.out.println("Retrieved document f.txt = " + d.toString());
-            d.selectLine(0);
-            d.insertLine().setText(sdfDate.format(new Date()));
-            System.out.println("Document = " + d.toString());
-            if (server.tryLockDocument(my_url, "f.txt")) {
-                System.out.println("Verrouillé");
-                server.saveDocument(my_url, "f.txt", d);
-                System.out.println("Sauvegardé");
-                server.unlockDocument(my_url, "f.txt", d);
-                System.out.println("Déverrouillé");
-            } else {
-                System.out.println("Échec du verrouillage");
-            }
-            server.closeDocument(my_url, "f.txt", d);
-            System.out.println("Fermé");
-            server.disconnectNotepad(my_url, null, null);
-            System.out.println("Déconnecté");
-            System.exit(0);
+            System.out.println("Ouverture du document " + fileName);
 
-        } else {
-            System.out.println("Échec de la connexion");
+            controller.openDocument(fileName);
+
+            System.out.println("Tentative de verrouillage du document " + fileName);
+
+            controller.tryLockDocument(my_url);
+
+            while (!controller.isLocked());
+
+            System.out.println("Document verrouillé");
+
+            DocumentInterface doc = controller.observedDocument.getDocument();
+
+            doc.selectLine(controller.observedDocument.getDocument().size() - 1);
+            doc.insertLine();
+            doc.getLine().setText("This is a test");
+
+            controller.saveDocument();
+
+            controller.unlockDocument();
+
+            controller.closeDocument();
+
+            controller.openDocument(fileName);
+
+            System.out.println(controller.observedDocument.getDocument().toString());
         }
-        */
-    }
 
+        controller.finalize();
+        System.exit(0);
+    }
 }

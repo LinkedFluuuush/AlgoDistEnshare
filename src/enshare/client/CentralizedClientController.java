@@ -173,6 +173,7 @@ public class CentralizedClientController extends AbstractClientController {
         }
     }
 
+
     /**
      * M�thode qui se d�clenche lorsque l'on re�oit un message COMMIT de la racine
      * @param r
@@ -182,7 +183,7 @@ public class CentralizedClientController extends AbstractClientController {
      * @throws MalformedURLException
      * @throws NotBoundException
      */
-    public void ReceiveCommit(String _fileName, String _url, HashMap<String,LinkedList<String[]>> _pred, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
+/*    public void ReceiveCommit(String _fileName, String _url, HashMap<String,LinkedList<String[]>> _pred, int _pos) throws RemoteException, MalformedURLException, NotBoundException{
     	String premierPred[] = new String[2];
     	premierPred[0] = _url;
     	premierPred[1] = String.valueOf(_pos);
@@ -203,6 +204,7 @@ public class CentralizedClientController extends AbstractClientController {
     	 }
     	 TokenTimer.schedule(TokenTimeout(_fileName), 1000);
     }
+    */
     
     /**
      * M�thode qui se d�clenche lorsque l'on a pas re�u le jeton � temps 
@@ -211,7 +213,7 @@ public class CentralizedClientController extends AbstractClientController {
      * @throws RemoteException 
      * @throws MalformedURLException 
      */
-    protected TimerTask TokenTimeout(String _fileName) throws MalformedURLException, RemoteException, NotBoundException{
+/*    protected TimerTask TokenTimeout(String _fileName) throws MalformedURLException, RemoteException, NotBoundException{
     	if(this.pred.get(_fileName).getFirst() == null){
     		Iterator<String[]> itPred = this.pred.get(_fileName).iterator();
         	String Pred[] = new String[2];
@@ -289,6 +291,8 @@ public class CentralizedClientController extends AbstractClientController {
     	ReconnectionTimer.schedule(TimeoutReconnection(), 1000);
     	
     }
+
+*/
     
     
     @Override
